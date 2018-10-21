@@ -34,6 +34,8 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);  //this is defining the pins
  * 
  *    Pin A = Arduino
  *    Pin B = Breadboard
+ *    
+ *    5V Power
  */
 
 //Define Vars
