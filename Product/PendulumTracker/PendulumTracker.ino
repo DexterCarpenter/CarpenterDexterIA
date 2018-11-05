@@ -8,9 +8,9 @@
 #include "SR04.h"          // Ultrasonic Sensor Lib
 
 //Define Pins
-const int CalPin = 0;
-const int RecPin = 13;
-const int LEDPin = 3;
+#define CALIBRATE_PIN 0
+#define RECORDING_PIN 13
+#define LED_PIN 3
 #define ECHO_PIN 4
 #define TRIG_PIN 5
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);  //this is defining the pins
@@ -33,61 +33,61 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);  //this is defining the pins
  * |   13  |  REC  | Yellow |
  * 
  *    Pin A = Arduino
- *    Pin B = Breadboard
+ *    Pin B = Breadboard/Component
  *    
  *    5V Power
  */
 
 //Define Vars
-float c = 0;
-float clast;
-int CalState = 0;
-int RecState = 0;
-SR04 sr04 = SR04(ECHO_PIN,TRIG_PIN); //Setup Ultrasonic
-long a;
-long alast = 0;                      // Ultrasonic rememberence
-long period;                         // In Milliseconds
-long starttime;
-bool calibrated = false;
-bool recording = false;
-bool acceptc = false;
+float CalibrateValue = 0;             // this is a calibrated distance that resembles a wall behind the pendulum
+float CalibrateValueLast;             // this the previous calibrated distance
+int CalState = 0;                     // Calibration Button
+int RecState = 0;                     // Record Button
+SR04 sr04 = SR04(ECHO_PIN,TRIG_PIN);  // Setup Ultrasonic
+long CurrentDistance;                 // Value read from distance sensor every frame of the program
+long CurrentDistanceLast = 0;         // The previous CurrentDistance
+long Period;                          // In Milliseconds
+long StartTime;                       // point in time that the pendulum is seen
+bool Calibrated = false;              // Weather or not the divice is calibrated
+bool Recording = false;               // Weather or not the device is recording
+bool AcceptCalibrateValue = false;    // Determining weather or not CalibrateValue is valid
 int trails = -1;                      // Maybe change the number of starting trials....
 //array periods[trials];
 
 void setup() {
   Serial.begin(9600);
   lcd.begin(16, 2);
-  pinMode(CalPin, INPUT);
-  pinMode(RecPin, INPUT);
-  pinMode(LEDPin, OUTPUT);
+  pinMode(CALIBRATE_PIN, INPUT);
+  pinMode(RECORDING_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
-  if ((calibrated == true) and (recording == true)) {
-    if ((a <= (c*0.75)) and (a != 0)) {
-      period = 0;
-      starttime = millis();
-      digitalWrite(LEDPin, HIGH);
+  if (Calibrated && Recording) {
+    if ((CurrentDistance <= (CalibrateValue*0.75)) and (CurrentDistance != 0)) {  //
+      Period = 0;
+      StartTime = millis();
+      digitalWrite(LED_PIN, HIGH);
     } else {
-      digitalWrite(LEDPin, LOW);
-      period = millis() - starttime;
-      //periods[trails + 1] = period;
+      digitalWrite(LED_PIN, LOW);
+      Period = millis() - StartTime;
+      //periods[trails + 1] = Period;
       lcd.setCursor(10, 1);
-      lcd.print(period);
+      lcd.print(Period);
     }
   }
   
   //CALIBRATION
-  CalState = digitalRead(CalPin);
+  CalState = digitalRead(CALIBRATE_PIN);
   if (CalState == LOW) {
     calibrate();
   }
   
   //RECORDING
-  RecState = digitalRead(RecPin);
-  //Serial.println(digitalRead(RecPin));
+  RecState = digitalRead(RECORDING_PIN);
+  //Serial.println(digitalRead(RECORDING_PIN));
   if (RecState == LOW) {
-    if (recording == true) {
+    if (Recording) {
       recordingOff();
     } else {
       recordingOn();
@@ -98,16 +98,16 @@ void loop() {
 }
 
 void calibrate() {
-  if (recording == false) {
+  if (!Recording) {
     lcd.clear();
-    clast = c;
-    c=sr04.Distance();
-    TestAcceptC();
-    if (acceptc == true) {
-      calibrated = true;
+    CalibrateValueLast = CalibrateValue;
+    CalibrateValue = sr04.Distance();
+    AcceptCalibrateValue = TestAcceptC(CalibrateValue, 0, 30);
+    if (AcceptCalibrateValue) {
+      Calibrated = true;
     } else {
       lcd.clear();
-      if (c == 0) {
+      if (CalibrateValue == 0) {
         lcd.setCursor(0, 0); lcd.print("CAL Can't = 0");
       } else {
         lcd.setCursor(0, 0); lcd.print("CAL Can't be >30");
@@ -115,7 +115,7 @@ void calibrate() {
       lcd.setCursor(0, 1); lcd.print("Try Again");
       delay(2000);
       lcd.clear();
-      c = clast;
+      CalibrateValue = CalibrateValueLast;
     }
   } else {
     lcd.clear();
@@ -128,24 +128,26 @@ void calibrate() {
 
 void updateLCD() {
   lcd.setCursor(0, 0);
-  a=sr04.Distance();
-  if (a != alast) {
+  CurrentDistance=sr04.Distance();
+  if (CurrentDistance != CurrentDistanceLast) {
     lcd.clear();
-    lcd.print(a);
-    alast = a;
+    lcd.print(CurrentDistance);
+    CurrentDistanceLast = CurrentDistance;
   }
   
   lcd.setCursor(0, 1); lcd.print("CAL:");
   
-  lcd.setCursor(4, 1); lcd.print(c);
+  lcd.setCursor(4, 1); lcd.print(CalibrateValue);
   
   lcd.setCursor(14, 0); lcd.print("cm");
 
-  //lcd.setCursor(12, 0); lcd.print(recording);
+  /* //This is for testing purposes
+  lcd.setCursor(12, 0); lcd.print(Recording);
 
-  //lcd.setCursor(10, 0); lcd.print(calibrated);
+  lcd.setCursor(10, 0); lcd.print(Calibrated);
 
-  //lcd.setCursor(8, 0); lcd.print(acceptc);
+  lcd.setCursor(8, 0); lcd.print(AcceptCalibrateValue);
+  */
 }
 
 void recordingOff() {
@@ -156,36 +158,30 @@ void recordingOff() {
   lcd.setCursor(0, 0); lcd.print("Recording: OFF");
   delay(1000);
   lcd.clear();
-  recording = false;
+  Recording = false;
 }
 
 void recordingOn() {
-  if (calibrated == true) {
-    TestAcceptC();
-    if (acceptc == true) {
+  if (Calibrated) {
+    AcceptCalibrateValue = TestAcceptC(CalibrateValue, 0, 30);
+    if (AcceptCalibrateValue) {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("Recording: ON");
       delay(1000);
       lcd.clear();
-      recording = true;
-    } else {
+      Recording = true;
+    }
+  } else {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("Not Calibrated");
       delay(2000);
       lcd.clear();
     }
-  }
 }
 
-void TestAcceptC() {
-  if ((c > 0) and (c < 30)) {
-    acceptc = true;
-  } else /*if ((c = 0) or (c >= 30))*/ {
-    acceptc = false;
-  }
+bool TestAcceptC(float CalibrateValue, float MinC, float MaxC) {
+  return CalibrateValue > MinC && CalibrateValue < MaxC;
 }
-
-
 
 
 
