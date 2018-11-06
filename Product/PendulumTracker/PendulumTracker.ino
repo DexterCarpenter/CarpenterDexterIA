@@ -1,7 +1,7 @@
 //Dexter Carpenter
-//Physics Final Project
-//Adapted from Elegoo
-//DATE: 5/27/18
+//IB Computer Science IA
+//Adapted from elegoo.com
+//DATE: 11/6/18
 
 //Libraries
 #include <LiquidCrystal.h> //LCD Lib
@@ -94,7 +94,7 @@ void loop() {
     }
   }
 
-  updateLCD();
+  updateLCD();  //done every frame
 }
 
 void calibrate() {
@@ -182,6 +182,3 @@ void recordingOn() {
 bool TestAcceptC(float CalibrateValue, float MinC, float MaxC) {
   return CalibrateValue > MinC && CalibrateValue < MaxC;
 }
-
-
-
