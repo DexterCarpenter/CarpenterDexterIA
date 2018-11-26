@@ -17,20 +17,20 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);  //this is defining the pins
 
 /*         Pin Table
  * | Pin A | Pin B | Color  |
- * |   0   |  CAL  | Oarnge |
+ * |   0   |  CAL  | Oarnge |    // Calibrate Button
  * |   1   |  N/A  |  N\A   |    // Not connected to anything
  * |   2   |  N/A  |  N\A   |    // Not connected to anything
- * |   3   |  LED  |  Red   |
- * |   4   |  Echo | Yellow |
- * |   5   |  Trig |  Blue  |
+ * |   3   |  LED  |  Red   |    // LED
+ * |   4   |  Echo | Yellow |    // Ultrasonic Sensor
+ * |   5   |  Trig |  Blue  |    // Ultrasonic Sensor
  * |   6   |  N/A  |  N\A   |    // Not connected to anything
- * |   7   |  RS   | Green  |
- * |   8   |   E   | Oarnge |
- * |   9   |   D4  |  Blue  |
- * |   10  |   D5  |  Blue  |
- * |   11  |   D6  |  Blue  |
- * |   12  |   D7  |  Blue  |
- * |   13  |  REC  | Yellow |
+ * |   7   |  RS   | Green  |    // LCD Display
+ * |   8   |   E   | Oarnge |    // LCD Display
+ * |   9   |   D4  |  Blue  |    // LCD Display
+ * |   10  |   D5  |  Blue  |    // LCD Display
+ * |   11  |   D6  |  Blue  |    // LCD Display
+ * |   12  |   D7  |  Blue  |    // LCD Display
+ * |   13  |  REC  | Yellow |    // Recording Button
  * 
  *    Pin A = Arduino
  *    Pin B = Breadboard/Component
