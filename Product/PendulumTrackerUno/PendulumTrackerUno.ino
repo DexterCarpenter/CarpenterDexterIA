@@ -5,7 +5,7 @@
 
 //Libraries
 #include <LiquidCrystal.h> //LCD Lib
-#include "SR04.h"          // Ultrasonic Sensor Lib
+#include <SR04.h>          // Ultrasonic Sensor Lib
 
 //Define Pins
 #define CALIBRATE_PIN 0
