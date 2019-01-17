@@ -53,8 +53,8 @@ long StartTime;                       // point in time that the pendulum is seen
 bool Calibrated = false;              // Weather or not the divice is calibrated
 bool Recording = false;               // Weather or not the device is recording
 bool AcceptCalibrateValue = false;    // Determining weather or not CalibrateValue is valid
-int trails = -1;                      // Maybe change the number of starting trials....
-//array periods[trials];
+int Passes = -1;                      // Number of passes of the pendulum
+int PeriodList[0];                    // Array for storing periods
 
 void setup() {
   Serial.begin(9600);
@@ -65,17 +65,20 @@ void setup() {
 }
 
 void loop() {
+  CurrentDistance=sr04.Distance(); 
   if (Calibrated && Recording) {
-    if ((CurrentDistance <= (CalibrateValue*0.75)) and (CurrentDistance != 0)) {
+    lcd.setCursor(10, 1); lcd.print(Period);
+    if ((CurrentDistance <= (CalibrateValue*0.75)) and (CurrentDistance != 0)) {    //if the pendulum is seen
+      digitalWrite(LED_PIN, HIGH);
+      if (Period > 0) {
+        PeriodList[Passes] = Period;      //store the period
+        Passes = Passes + 1;
+      }
       Period = 0;
       StartTime = millis();
-      digitalWrite(LED_PIN, HIGH);
-    } else {
+    } else {                                                                        //if pendulum is not seen
       digitalWrite(LED_PIN, LOW);
       Period = millis() - StartTime;
-      //periods[trails + 1] = Period;
-      lcd.setCursor(10, 1);
-      lcd.print(Period);
     }
   }
   
@@ -130,7 +133,6 @@ void calibrate() {
 
 void updateLCD() {
   lcd.setCursor(0, 0);
-  CurrentDistance=sr04.Distance();
   if (CurrentDistance != CurrentDistanceLast) {
     lcd.clear();
     lcd.print(CurrentDistance);
@@ -164,6 +166,7 @@ void recordingOff() {
 }
 
 void recordingOn() {
+  Period = 0;
   if (Calibrated) {
     AcceptCalibrateValue = TestAcceptC(CalibrateValue, 0, 30);
     if (AcceptCalibrateValue) {
@@ -184,3 +187,6 @@ void recordingOn() {
 bool TestAcceptC(float CalibrateValue, float MinC, float MaxC) {
   return CalibrateValue > MinC && CalibrateValue < MaxC;
 }
+
+
+
